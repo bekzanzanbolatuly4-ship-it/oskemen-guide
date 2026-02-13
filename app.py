@@ -10,10 +10,14 @@ st.set_page_config(
     layout="wide"
 )
 
-# Google-ға сайтты табуға көмектесетін жасырын сипаттама
+# --- GOOGLE VERIFICATION ЖӘНЕ SEO МЕТА-ТЕГТЕР ---
+# Google Search Console үшін растау коды осы жерде
 st.markdown("""
-    <meta name="description" content="OskemenGuide AI — Восточный Казахстан. Маршруты, Катон-Карагай, Бухтарма, Киин-Кериш. Создано Bekzhan & DreamTeam.">
-    <meta name="keywords" content="ВКО, Туризм, ШҚО, Катон-Карагай, Оскемен, Усть-Каменогорск, Гид, ИИ">
+    <head>
+        <meta name="google-site-verification" content="google7a49481bcf67fe79" />
+        <meta name="description" content="OskemenGuide AI — Шығыс Қазақстан бойынша цифрлық гид. Катонқарағай, Бухтарма, Киын-Кериш бағыттары.">
+        <meta name="keywords" content="ВКО, Туризм, ШҚО, Катон-Карагай, Өскемен, Усть-Каменогорск, Гид, ИИ">
+    </head>
 """, unsafe_allow_html=True)
 
 # --- СТИЛЬДЕР ---
@@ -22,7 +26,6 @@ st.markdown("""
     .stChatMessage { border-radius: 15px; }
     .stButton>button { width: 100%; border-radius: 10px; font-weight: bold; background-color: #f0f2f6; }
     .stButton>button:hover { background-color: #008457; color: white; }
-    h1 { color: #1E1E1E; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -113,7 +116,6 @@ with st.sidebar:
 
 # --- MAIN ---
 st.title("🏔️ OskemenGuide AI")
-st.subheader("Цифрлық гид және навигация")
 
 map_df = pd.DataFrame([{'lat': c['lat'], 'lon': c['lon'], 'name': n} for n, c in destinations.items()])
 if u_lat:
