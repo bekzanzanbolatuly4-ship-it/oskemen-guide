@@ -4,18 +4,29 @@ import google.generativeai as genai
 st.set_page_config(page_title="OskemenGuide AI", page_icon="🏔️")
 st.title("🏔️ OskemenGuide AI")
 
-# Прямая проверка ключа
 if "GEMINI_KEY" not in st.secrets:
     st.error("Ключ не найден в Secrets")
     st.stop()
 
 genai.configure(api_key=st.secrets["GEMINI_KEY"])
 
-# Без кэша, чтобы сразу видеть ошибку если она есть
-try:
-    model = genai.GenerativeModel('gemini-1.5-flash')
-except Exception as e:
-    st.error(f"Ошибка инициализации: {e}")
+# Пробуем разные названия моделей, которые подходят для старых API
+@st.cache_resource
+def load_model():
+    # Мы перебираем названия, чтобы обойти ошибку 404
+    for model_name in ['gemini-1.5-flash-latest', 'gemini-pro', 'models/gemini-pro']:
+        try:
+            model = genai.GenerativeModel(model_name)
+            model.generate_content("test")
+            return model
+        except:
+            continue
+    return None
+
+model = load_model()
+
+if not model:
+    st.error("Ошибка: Модель недоступна. Попробуйте обновить библиотеку в requirements.txt")
     st.stop()
 
 if "messages" not in st.session_state:
