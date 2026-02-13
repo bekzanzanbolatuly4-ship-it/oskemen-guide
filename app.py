@@ -20,7 +20,6 @@ st.markdown("""
 destinations = {
     "🦌 Катон-Карагай": {
         "lat": 49.1725, "lon": 85.5136, 
-        "img": "https://images.unsplash.com/photo-1589405709100-36a591321703?q=80&w=800",
         "desc": "Қазақстанның Алтайы, маралдар мен бал қарағайлар мекені."
     },
     "🏖️ Бухтарма": {
@@ -125,3 +124,4 @@ if prompt := st.chat_input("ШҚО туралы не білгіңіз келед
             st.session_state.messages.append({"role": "assistant", "content": response})
         except Exception as e:
             st.error(f"Қате орын алды: {e}")
+
