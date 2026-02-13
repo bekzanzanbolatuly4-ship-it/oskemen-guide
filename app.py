@@ -132,7 +132,7 @@ elif menu == "🚐 Турлар":
 
 # --- 🤖 AI КОНСУЛЬТАНТ ---
 elif menu == "🤖 AI Консультант":
-    st.header("🤖 Смарт Гид (LLama 3.3)")
+    st.header("🤖 Смарт Гид (DreamTeam AI 3.3)")
     st.write("Кез келген сұрақ қойыңыз: 'Қай отель арзан?', 'Катонға қалай барамын?', 'Ең әдемі жер қайда?'")
     
     if "messages" not in st.session_state:
@@ -162,3 +162,4 @@ elif menu == "🤖 AI Консультант":
                 st.session_state.messages.append({"role": "assistant", "content": res})
             except:
                 st.error("API Error")
+
