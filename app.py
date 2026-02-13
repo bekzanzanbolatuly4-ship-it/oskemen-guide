@@ -1,30 +1,34 @@
 import streamlit as st
 import pandas as pd
 from groq import Groq
+from streamlit_js_eval import get_geolocation
 
-# --- КОНФИГУРАЦИЯ ---
+# --- НАСТРОЙКА ---
 st.set_page_config(page_title="OskemenGuide AI", page_icon="🏔️", layout="wide")
 
-# --- СТИЛЬ ---
-st.markdown("""
-    <style>
-    .stChatMessage { border-radius: 15px; }
-    .stButton>button { border-radius: 8px; height: 3em; }
-    </style>
-    """, unsafe_allow_html=True)
+# --- СТИЛИ ---
+st.markdown("""<style>.stChatMessage { border-radius: 15px; } .stButton>button { width: 100%; border-radius: 8px; }</style>""", unsafe_allow_html=True)
 
-# --- ДАННЫЕ ДЛЯ КАРТЫ (Главные точки ВКО) ---
-locations = pd.DataFrame({
-    'name': ['Усть-Каменогорск', 'Бухтарма', 'Катон-Карагай', 'Рахмановские ключи', 'Сибинские озера', 'Киин-Кериш'],
-    'lat': [49.9487, 49.6100, 49.1725, 49.2500, 49.4444, 48.1389],
-    'lon': [82.6285, 83.5100, 85.5136, 86.5000, 82.6333, 84.8111]
-})
+# --- ГЕОЛОКАЦИЯ ---
+st.sidebar.title("📍 Ваша локация")
+loc = get_geolocation() # Запрос геопозиции у браузера
 
-# --- ПРОВЕРКА КЛЮЧА ---
-if "GROQ_API_KEY" not in st.secrets:
-    st.error("🔑 GROQ_API_KEY missing!")
-    st.stop()
+user_lat, user_lon = None, None
+if loc:
+    user_lat = loc['coords']['latitude']
+    user_lon = loc['coords']['longitude']
+    st.sidebar.success(f"Координаты получены: {user_lat:.4f}, {user_lon:.4f}")
+else:
+    st.sidebar.warning("Пожалуйста, разрешите доступ к геопозиции для построения маршрутов.")
 
+# --- ДАННЫЕ МЕСТ ---
+destinations = {
+    "Сибинские озёра": {"lat": 49.4329, "lon": 82.6571, "dist_info": "~72 км от Усть-Каменогорска"},
+    "Бухтарма": {"lat": 49.5735, "lon": 83.5612, "dist_info": "~100 км от Усть-Каменогорска"},
+    "Катон-Карагай": {"lat": 49.1725, "lon": 85.5136, "dist_info": "~350 км от Усть-Каменогорска"}
+}
+
+# --- ПРОВЕРКА API КЛЮЧА ---
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
 if "messages" not in st.session_state:
@@ -32,90 +36,54 @@ if "messages" not in st.session_state:
 
 # --- БОКОВАЯ ПАНЕЛЬ ---
 with st.sidebar:
-    st.title("🗺️ Путеводитель")
-    st.info("🚀 **Developed by Bekzhan & DreamTeam**")
-    
-    st.subheader("📍 Быстрые маршруты")
-    route_press = None
-    if st.button("🦌 Катон-Карагай"):
-        route_press = "Расскажи подробно про Катон-Карагай на языке моего запроса."
-    if st.button("🏜️ Киин-Кериш"):
-        route_press = "Как доехать до Киин-Кериш? Опиши на моем языке."
-    if st.button("❄️ Гора Белуха"):
-        route_press = "Инфо про гору Белуха и как туда попасть."
-    if st.button("🌊 Озеро Маркаколь"):
-        route_press = "Маршрут до озера Маркаколь и его особенности."
-
+    st.subheader("🚀 Developed by Bekzhan & DreamTeam")
     st.markdown("---")
-    if st.button("🗑️ Очистить чат"):
-        st.session_state.messages = []
-        st.rerun()
+    st.subheader("🗺️ Построить маршрут:")
+    
+    selected_route = None
+    for place in destinations:
+        if st.button(f"🚗 До {place}"):
+            if user_lat and user_lon:
+                selected_route = f"Я нахожусь здесь: {user_lat}, {user_lon}. Построй маршрут до {place}. Сколько ехать и какая дорога?"
+            else:
+                selected_route = f"Расскажи маршрут из Усть-Каменогорска до {place}. (Геопозиция не определена)"
 
-# --- ОСНОВНОЙ КОНТЕНТ ---
+# --- ОСНОВНОЙ БЛОК ---
 st.title("🏔️ OskemenGuide AI")
-st.caption("✨ *by Bekzhan and DreamTeam*")
+st.caption("✨ by Bekzhan & DreamTeam")
 
-# Вывод карты
-st.subheader("📍 Карта ключевых мест ВКО")
-st.map(locations)
+# Карта
+map_data = pd.DataFrame(list(destinations.values()))
+if user_lat: # Добавляем пользователя на карту
+    user_point = pd.DataFrame([{'lat': user_lat, 'lon': user_lon, 'name': 'Вы здесь'}])
+    st.map(pd.concat([map_data, user_point]))
+else:
+    st.map(map_data)
 
-# История чата
+# Чат
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# Логика ввода
-user_input = st.chat_input("Спроси на любом языке / Кез келген тілде сұраңыз...")
-final_prompt = user_input or route_press
+prompt = st.chat_input("Спроси дорогу...")
+final_prompt = prompt or selected_route
 
 if final_prompt:
-    if user_input:
-        st.session_state.messages.append({"role": "user", "content": user_input})
-        with st.chat_message("user"):
-            st.markdown(user_input)
+    st.session_state.messages.append({"role": "user", "content": final_prompt})
+    with st.chat_message("user"): st.markdown(final_prompt)
 
     with st.chat_message("assistant"):
         try:
             completion = client.chat.completions.create(
                 model="llama-3.3-70b-versatile",
                 messages=[
-                    {
-                        "role": "system", 
-                        "content": (
-                            "Ты — профессиональный гид по ВКО от Bekzhan & DreamTeam. "
-                            "ПРАВИЛО №1: Всегда отвечай СТРОГО на том языке, на котором написан вопрос. "
-                            "Если пишут на казахском — отвечай на красивом казахском. "
-                            "Если на английском — на английском. "
-                            "Давай точные координаты, маршруты и советы по дорогам ВКО."
-                        )
-                    },
+                    {"role": "system", "content": "Ты гид-навигатор. Если есть координаты пользователя, рассчитай примерное время и опиши путь. Отвечай на языке запроса."},
                     {"role": "user", "content": final_prompt}
                 ],
                 temperature=0.3,
             )
-            response = completion.choices[0].message.content
-            st.markdown(response)
-            st.session_state.messages.append({"role": "assistant", "content": response})
+            res = completion.choices[0].message.content
+            st.markdown(res)
+            st.session_state.messages.append({"role": "assistant", "content": res})
         except Exception as e:
-            st.error(f"Error: {e}")
-
-# --- ДАННЫЕ ДЛЯ КАРТЫ (Bekzhan & DreamTeam Edition) ---
-locations = pd.DataFrame({
-    'name': [
-        'Усть-Каменогорск (Центр)', 
-        'Бухтарма (Голубой залив)', 
-        'Катон-Карагай (Заповедник)', 
-        'Рахмановские ключи (Курорт)', 
-        'Сибинские озера (Шалкар)', 
-        'Киин-Кериш (Каньоны)',
-        'Гора Белуха (Пик)',
-        'Озеро Маркаколь',
-        'Риддер (Ивановский белок)'
-    ],
-    'lat': [49.9487, 49.6100, 49.1725, 49.2500, 49.4444, 48.1389, 49.8105, 48.7000, 50.3450],
-    'lon': [82.6285, 83.5100, 85.5136, 86.5000, 82.6333, 84.8111, 86.5886, 85.9500, 83.5100]
-})
-
-# Отрисовка карты
-st.subheader("📍 Карта туристических маршрутов ШҚО")
-st.map(locations)
+            st.error(f"Ошибка: {e}")
