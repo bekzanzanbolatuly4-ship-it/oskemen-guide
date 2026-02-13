@@ -12,14 +12,14 @@ st.markdown("""
     .stChatMessage { border-radius: 15px; }
     .stButton>button { width: 100%; border-radius: 10px; font-weight: bold; transition: 0.3s; }
     .stButton>button:hover { background-color: #008457; color: white; }
-    .main-title { font-size: 3rem; font-weight: bold; color: #1E1E1E; }
     </style>
 """, unsafe_allow_html=True)
 
-# --- ДЕРЕКТЕР ҚОРЫ (Локациялар, Фотолар және Сипаттама) ---
+# --- ДЕРЕКТЕР ҚОРЫ ---
 destinations = {
     "🦌 Катон-Карагай": {
         "lat": 49.1725, "lon": 85.5136, 
+        "img": None,  # Фото жойылды
         "desc": "Қазақстанның Алтайы, маралдар мен бал қарағайлар мекені."
     },
     "🏖️ Бухтарма": {
@@ -44,57 +44,53 @@ destinations = {
     }
 }
 
-# --- ГЕОЛОКАЦИЯ АНЫҚТАУ ---
+# --- ГЕОЛОКАЦИЯ ---
 loc = get_geolocation()
 u_lat, u_lon = (loc['coords']['latitude'], loc['coords']['longitude']) if loc else (None, None)
 
 # --- SIDEBAR (БАСҚАРУ ПАНЕЛІ) ---
 with st.sidebar:
-    st.image("https://cdn-icons-png.flaticon.com/512/826/826070.png", width=100)
+    st.image("https://cdn-icons-png.flaticon.com/512/826/826070.png", width=80)
     st.title("🧭 Oskemen Navigator")
     st.write("Команда: **Bekzhan & DreamTeam**")
     st.markdown("---")
     
-    # Орын таңдау
     selected_place = st.selectbox("Қайда барамыз?", list(destinations.keys()))
     place_data = destinations[selected_place]
     
-    # Фото және Сипаттама
-    st.image(place_data['img'], caption=selected_place, use_container_width=True)
+    # ФОТО КӨРСЕТУ (Егер фото болса ғана шығады)
+    if place_data['img']:
+        st.image(place_data['img'], caption=selected_place, use_container_width=True)
+    
     st.info(place_data['desc'])
     
-    # Google Maps Маршрут батырмасы
+    # Google Maps батырмасы
     if u_lat:
-        # Google Maps URL форматы: https://www.google.com/maps/dir/lat1,lon1/lat2,lon2
         route_url = f"https://www.google.com/maps/dir/{u_lat},{u_lon}/{place_data['lat']},{place_data['lon']}"
-        st.markdown(f'<a href="{route_url}" target="_blank"><button style="background-color: #4285F4; color: white; border: none; padding: 10px; width: 100%; border-radius: 10px; cursor: pointer;">🗺️ Маршрутты Google Maps-тен көру</button></a>', unsafe_allow_html=True)
+        st.markdown(f'<a href="{route_url}" target="_blank"><button style="background-color: #4285F4; color: white; border: none; padding: 10px; width: 100%; border-radius: 10px; cursor: pointer;">🗺️ Маршрутты ашу</button></a>', unsafe_allow_html=True)
     else:
-        st.warning("📍 Маршрут құру үшін геопозицияға рұқсат беріңіз.")
+        st.warning("📍 Геопозиция қосылмаған.")
 
-    # DONATE (HALYK QR) БЛОГЫ
+    # DONATE БЛОГЫ
     st.markdown("---")
-    st.subheader("💚 на кофе плиз ")
+    st.subheader("💚 Жобаны қолдау")
     try:
         st.image("donate.jpg", caption="Halyk QR сканерлеңіз", use_container_width=True)
     except:
-        st.error("donate.jpg файлы табылмады")
+        st.caption("Halyk QR арқылы қолдау (donate.jpg)")
     
     st.markdown('<div style="background-color: #008457; color: white; padding: 10px; border-radius: 10px; text-align: center; font-weight: bold;">Halyk Bank 💳</div>', unsafe_allow_html=True)
 
 # --- НЕГІЗГІ БЕТ ---
 st.title("🏔️ OskemenGuide AI")
-st.write(f"Сәлем! Мен сіздің ШҚО бойынша ақылды көмекшіңізбін.")
 
-# Интерактивті карта
-map_list = []
-for name, coords in destinations.items():
-    map_list.append({'lat': coords['lat'], 'lon': coords['lon'], 'name': name})
+# Карта
+map_df = pd.DataFrame([{'lat': c['lat'], 'lon': c['lon'], 'name': n} for n, c in destinations.items()])
 if u_lat:
-    map_list.append({'lat': u_lat, 'lon': u_lon, 'name': 'СІЗ ОСЫНДАСЫЗ'})
+    map_df = pd.concat([map_df, pd.DataFrame([{'lat': u_lat, 'lon': u_lon, 'name': 'СІЗ'}])])
+st.map(map_df)
 
-st.map(pd.DataFrame(map_list))
-
-# Чат интерфейсі
+# Чат
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
@@ -102,8 +98,7 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# Сұрақ енгізу
-if prompt := st.chat_input("ШҚО туралы не білгіңіз келеді?"):
+if prompt := st.chat_input("Сұрақ қойыңыз..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
@@ -111,17 +106,16 @@ if prompt := st.chat_input("ШҚО туралы не білгіңіз келед
     with st.chat_message("assistant"):
         try:
             client = Groq(api_key=st.secrets["GROQ_API_KEY"])
-            completion = client.chat.completions.create(
+            res = client.chat.completions.create(
                 model="llama-3.3-70b-versatile",
                 messages=[
-                    {"role": "system", "content": "Сен Шығыс Қазақстан бойынша кәсіби гидсің. Жауаптарың нақты, сауатты және достық райда болсын. Бекжан және DreamTeam командасы жасаған жоба екенін ұмытпа."},
+                    {"role": "system", "content": "Сен ШҚО бойынша гидсің. Бекжан және DreamTeam жасаған жоба."},
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0.3,
-            )
-            response = completion.choices[0].message.content
-            st.markdown(response)
-            st.session_state.messages.append({"role": "assistant", "content": response})
+            ).choices[0].message.content
+            st.markdown(res)
+            st.session_state.messages.append({"role": "assistant", "content": res})
         except Exception as e:
-            st.error(f"Қате орын алды: {e}")
-
+            st.error("API Error")
+        
