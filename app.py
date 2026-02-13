@@ -66,16 +66,21 @@ with st.sidebar:
     
     # Google Maps Маршрут батырмасы
     if u_lat:
+        # Google Maps URL форматы: https://www.google.com/maps/dir/lat1,lon1/lat2,lon2
         route_url = f"https://www.google.com/maps/dir/{u_lat},{u_lon}/{place_data['lat']},{place_data['lon']}"
-        st.markdown(f'<a href="{route_url}" target="_blank"><button style="background-color: #4285F4; color: white; border: none; padding: 10px; width: 100%; border-radius: 10px; cursor: pointer;">🗺️ Google Maps-те ашу</button></a>', unsafe_allow_html=True)
+        st.markdown(f'<a href="{route_url}" target="_blank"><button style="background-color: #4285F4; color: white; border: none; padding: 10px; width: 100%; border-radius: 10px; cursor: pointer;">🗺️ Маршрутты Google Maps-тен көру</button></a>', unsafe_allow_html=True)
     else:
         st.warning("📍 Маршрут құру үшін геопозицияға рұқсат беріңіз.")
 
-    # HALYK QR БЛОГЫ
+    # DONATE (HALYK QR) БЛОГЫ
     st.markdown("---")
-    st.subheader("💚 Жобаны қолдау")
-    st.image("https://photos.app.goo.gl/uStXL2xGpEKA8iEf6", caption="Halyk QR сканерлеңіз", use_container_width=True)
-    st.markdown('<div style="background-color: #008457; color: white; padding: 10px; border-radius: 10px; text-align: center;">Halyk Bank 💳</div>', unsafe_allow_html=True)
+    st.subheader("💚 на кофе плиз ")
+    try:
+        st.image("donate.jpg", caption="Halyk QR сканерлеңіз", use_container_width=True)
+    except:
+        st.error("donate.jpg файлы табылмады")
+    
+    st.markdown('<div style="background-color: #008457; color: white; padding: 10px; border-radius: 10px; text-align: center; font-weight: bold;">Halyk Bank 💳</div>', unsafe_allow_html=True)
 
 # --- НЕГІЗГІ БЕТ ---
 st.title("🏔️ OskemenGuide AI")
