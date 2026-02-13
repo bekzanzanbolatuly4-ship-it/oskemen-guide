@@ -1,50 +1,46 @@
 import streamlit as st
-import requests
+from groq import Groq
 
+# 1. Настройка страницы
 st.set_page_config(page_title="OskemenGuide AI", page_icon="🏔️")
 st.title("🏔️ OskemenGuide AI")
+st.subheader("Безопасное подключение через Secrets")
 
-# Твой API ключ
-API_KEY = "AIzaSyBuXI1rAoCyDujcOSF7poXKZW1o_qozRhI"
-# Прямая ссылка для запроса к Google
-URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={API_KEY}"
+# 2. Получение ключа из Secrets
+if "GROQ_API_KEY" not in st.secrets:
+    st.error("Ошибка: Ключ GROQ_API_KEY не найден в Secrets!")
+    st.stop()
 
+# Инициализация клиента через секреты
+client = Groq(api_key=st.secrets["GROQ_API_KEY"])
+
+# 3. История чата
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Отображение истории чата
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.write(message["content"])
 
-# Ввод сообщения
-if prompt := st.chat_input("Спроси меня о Восточном Казахстане..."):
+# 4. Логика чата
+if prompt := st.chat_input("Спроси про ВКО..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.write(prompt)
 
     with st.chat_message("assistant"):
-        # Формируем запрос
-        payload = {
-            "contents": [{
-                "parts": [{"text": f"Ты профессиональный гид по ВКО. Отвечай кратко и интересно на вопрос: {prompt}"}]
-            }]
-        }
-        
         try:
-            # Отправляем запрос напрямую
-            response = requests.post(URL, json=payload)
-            data = response.json()
+            completion = client.chat.completions.create(
+                model="llama3-8b-8192",
+                messages=[
+                    {"role": "system", "content": "Ты гид по Восточному Казахстану. Отвечай кратко на русском."},
+                    {"role": "user", "content": prompt}
+                ],
+            )
             
-            # Проверяем ответ
-            if "candidates" in data:
-                answer = data["candidates"][0]["content"]["parts"][0]["text"]
-                st.write(answer)
-                st.session_state.messages.append({"role": "assistant", "content": answer})
-            else:
-                # Если Google выдал ошибку (например, по региону), мы её увидим здесь
-                error_msg = data.get("error", {}).get("message", "Неизвестная ошибка")
-                st.error(f"Google ответил: {error_msg}")
+            response_text = completion.choices[0].message.content
+            st.write(response_text)
+            st.session_state.messages.append({"role": "assistant", "content": response_text})
+            
         except Exception as e:
-            st.error(f"Ошибка связи: {e}")
-
+            st.error(f"Ошибка: {e}")
