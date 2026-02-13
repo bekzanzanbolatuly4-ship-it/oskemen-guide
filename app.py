@@ -3,13 +3,13 @@ from groq import Groq
 
 # --- НАСТРОЙКА СТРАНИЦЫ ---
 st.set_page_config(
-    page_title="OskemenGuide AI by Bekzhan", 
+    page_title="OskemenGuide AI by Bekzhan and DreamTeam", 
     page_icon="🏔️", 
     layout="centered"
 )
 
 # Стилизация заголовка
-st.title("🏔️ OskemenGuide AI by Bekzhan")
+st.title("🏔️ OskemenGuide AI by Bekzhan and DreamTeam")
 st.markdown("### Твой персональный гид по Восточному Казахстану")
 st.info("Спроси меня о достопримечательностях Усть-Каменогорска, Катон-Карагая или Бухтармы!")
 
@@ -68,4 +68,5 @@ if prompt := st.chat_input("Напишите ваш вопрос здесь...")
             
         except Exception as e:
             st.error(f"Произошла ошибка при обращении к ИИ: {e}")
+
 
