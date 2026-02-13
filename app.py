@@ -6,7 +6,7 @@ st.set_page_config(page_title="OskemenGuide AI", page_icon="🏔️")
 st.title("🏔️ OskemenGuide AI")
 
 # 2. Прямая настройка ключа (без st.secrets)
-API_KEY = "AIzaSyBuXI1rAoCyDujcOSF7poXKZW1o_qozRhI"
+API_KEY = "AIzaSyCmJieV-FGA1cTLNr44g1gpB_aP9iosPag"
 genai.configure(api_key=API_KEY)
 
 # 3. Инициализация модели
@@ -51,3 +51,4 @@ if prompt := st.chat_input("Напиши что-нибудь..."):
             st.session_state.messages.append({"role": "assistant", "content": response.text})
         except Exception as e:
             st.error(f"Ошибка API: {e}")
+
