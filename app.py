@@ -84,7 +84,7 @@ with st.sidebar:
     place_labels = {
         "KK": "Қайда барамыз?",
         "RU": "Куда поедем?",
-        "EN": "Where to go?"
+        "EN": "Where shall we go?"
     }
     
     selected_place = st.selectbox(place_labels[lang], list(destinations.keys()))
@@ -143,3 +143,4 @@ if prompt := st.chat_input("Ask me anything about East Kazakhstan..."):
             st.session_state.messages.append({"role": "assistant", "content": res})
         except Exception as e:
             st.error("AI Error. Check API key.")
+
