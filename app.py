@@ -1,18 +1,15 @@
 import streamlit as st
 from groq import Groq
 
-# --- НАСТРОЙКА СТРАНИЦЫ ---
 st.set_page_config(
     page_title="OskemenGuide AI", 
     page_icon="🏔️", 
     layout="centered"
 )
 
-# --- ВИШЕНКА НА ТОРТЕ ---
 st.title("🏔️ OskemenGuide AI")
-st.caption("✨ by Bekzhan ✨")
+st.caption("✨ by Bekzhan and DreamTeam✨")
 
-# --- СТИЛИЗАЦИЯ (теперь точно без ошибок) ---
 st.markdown("""
     <style>
     .stChatMessage { border-radius: 15px; }
@@ -33,7 +30,6 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# --- ЛОГИКА ЧАТА ---
 if prompt := st.chat_input("Напиши любой вопрос..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     
@@ -73,3 +69,4 @@ with st.sidebar:
     st.header("О проекте")
     st.write("👨‍💻 Разработчик: **Bekzhan**")
     st.success("Статус: Работает")
+
