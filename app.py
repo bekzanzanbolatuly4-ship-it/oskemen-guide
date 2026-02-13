@@ -7,7 +7,6 @@ st.set_page_config(page_title="OskemenGuide AI", page_icon="🏔️", layout="ce
 st.title("🏔️ OskemenGuide AI")
 st.caption("✨ by Bekzhan ✨")
 
-# --- ПРОСТОЙ ИСПРАВЛЕННЫЙ СТИЛЬ ---
 st.markdown("""<style>.stChatMessage { border-radius: 15px; }</style>""", unsafe_allow_html=True)
 
 if "GROQ_API_KEY" not in st.secrets:
@@ -62,3 +61,4 @@ with st.sidebar:
     if st.button("Тазалау / Очистить"):
         st.session_state.messages = []
         st.rerun()
+
