@@ -74,7 +74,7 @@ u_lat, u_lon = (loc['coords']['latitude'], loc['coords']['longitude']) if loc el
 
 # --- SIDEBAR ---
 with st.sidebar:
-    st.title("🧭 Oskemen Navigator")
+    st.title("🧭 Oskemen Navigator/guide")
     st.write("**Bekzhan & DreamTeam**")
     st.markdown("---")
     
@@ -143,4 +143,5 @@ if prompt := st.chat_input("Ask me anything about East Kazakhstan..."):
             st.session_state.messages.append({"role": "assistant", "content": res})
         except Exception as e:
             st.error("AI Error. Check API key.")
+
 
