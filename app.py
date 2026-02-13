@@ -18,9 +18,6 @@ def load_model():
 
 model = load_model()
 
-import streamlit as st
-import google.generativeai as genai
-
 st.set_page_config(page_title="OskemenGuide AI", page_icon="🏔️")
 st.title("🏔️ OskemenGuide AI")
 
@@ -69,3 +66,4 @@ if prompt := st.chat_input("Спроси про ВКО..."):
             st.session_state.messages.append({"role": "assistant", "content": res.text})
         except Exception as e:
             st.error(f"Ошибка API: {e}")
+
