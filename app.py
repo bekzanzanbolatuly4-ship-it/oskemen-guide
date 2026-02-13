@@ -3,19 +3,30 @@ import pandas as pd
 from groq import Groq
 from streamlit_js_eval import get_geolocation
 
-# --- БЕТТІҢ ПАРАМЕТРЛЕРІ ---
-st.set_page_config(page_title="OskemenGuide AI", page_icon="🏔️", layout="wide")
+# --- SEO ЖӘНЕ БЕТТІҢ ПАРАМЕТРЛЕРІ ---
+st.set_page_config(
+    page_title="OskemenGuide AI | Путеводитель по ВКО | ШҚО Туризмі",
+    page_icon="🏔️",
+    layout="wide"
+)
+
+# Google-ға сайтты табуға көмектесетін жасырын сипаттама
+st.markdown("""
+    <meta name="description" content="OskemenGuide AI — Восточный Казахстан. Маршруты, Катон-Карагай, Бухтарма, Киин-Кериш. Создано Bekzhan & DreamTeam.">
+    <meta name="keywords" content="ВКО, Туризм, ШҚО, Катон-Карагай, Оскемен, Усть-Каменогорск, Гид, ИИ">
+""", unsafe_allow_html=True)
 
 # --- СТИЛЬДЕР ---
 st.markdown("""
     <style>
     .stChatMessage { border-radius: 15px; }
-    .stButton>button { width: 100%; border-radius: 10px; font-weight: bold; transition: 0.3s; }
+    .stButton>button { width: 100%; border-radius: 10px; font-weight: bold; background-color: #f0f2f6; }
     .stButton>button:hover { background-color: #008457; color: white; }
+    h1 { color: #1E1E1E; }
     </style>
 """, unsafe_allow_html=True)
 
-# --- КЕҢЕЙТІЛГЕН ДЕРЕКТЕР ҚОРЫ (10 ЛОКАЦИЯ) ---
+# --- ДЕРЕКТЕР ҚОРЫ ---
 destinations = {
     "🦌 Катон-Карагай / Katon-Karagay": {
         "lat": 49.1725, "lon": 85.5136, "img": None,
@@ -74,18 +85,12 @@ u_lat, u_lon = (loc['coords']['latitude'], loc['coords']['longitude']) if loc el
 
 # --- SIDEBAR ---
 with st.sidebar:
-    st.title("🧭 Oskemen Navigator/guide")
+    st.title("🧭 Oskemen Navigator")
     st.write("**Bekzhan & DreamTeam**")
     st.markdown("---")
     
-    # Тіл таңдау мүмкіндігі (интерфейс үшін)
     lang = st.radio("Language / Тіл / Язык", ["KK", "RU", "EN"])
-    
-    place_labels = {
-        "KK": "Қайда барамыз?",
-        "RU": "Куда поедем?",
-        "EN": "Where shall we go?"
-    }
+    place_labels = {"KK": "Қайда барамыз?", "RU": "Куда поедем?", "EN": "Where to go?"}
     
     selected_place = st.selectbox(place_labels[lang], list(destinations.keys()))
     place_data = destinations[selected_place]
@@ -96,7 +101,7 @@ with st.sidebar:
     st.info(place_data['desc'])
     
     if u_lat:
-        route_url = f"https://www.google.com/maps/dir/{u_lat},{u_lon}/{place_data['lat']},{place_data['lon']}"
+        route_url = f"https://www.google.com/maps/dir/?api=1&origin={u_lat},{u_lon}&destination={place_data['lat']},{place_data['lon']}&travelmode=driving"
         st.markdown(f'<a href="{route_url}" target="_blank"><button style="background-color: #4285F4; color: white; border: none; padding: 10px; width: 100%; border-radius: 10px; cursor: pointer;">🚗 Google Maps Route</button></a>', unsafe_allow_html=True)
 
     st.markdown("---")
@@ -108,14 +113,13 @@ with st.sidebar:
 
 # --- MAIN ---
 st.title("🏔️ OskemenGuide AI")
+st.subheader("Цифрлық гид және навигация")
 
-# Картаны көрсету
 map_df = pd.DataFrame([{'lat': c['lat'], 'lon': c['lon'], 'name': n} for n, c in destinations.items()])
 if u_lat:
     map_df = pd.concat([map_df, pd.DataFrame([{'lat': u_lat, 'lon': u_lon, 'name': 'YOU'}])])
 st.map(map_df)
 
-# Чат
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
@@ -123,7 +127,7 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-if prompt := st.chat_input("Ask me anything about East Kazakhstan..."):
+if prompt := st.chat_input("Сұрақ қойыңыз / Задайте вопрос..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
@@ -134,7 +138,7 @@ if prompt := st.chat_input("Ask me anything about East Kazakhstan..."):
             res = client.chat.completions.create(
                 model="llama-3.3-70b-versatile",
                 messages=[
-                    {"role": "system", "content": "You are a professional guide for East Kazakhstan. Answer in the language the user is using. Project by Bekzhan & DreamTeam."},
+                    {"role": "system", "content": "You are a professional guide for East Kazakhstan. Answer in the user's language. Project by Bekzhan & DreamTeam."},
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0.3,
@@ -142,6 +146,4 @@ if prompt := st.chat_input("Ask me anything about East Kazakhstan..."):
             st.markdown(res)
             st.session_state.messages.append({"role": "assistant", "content": res})
         except Exception as e:
-            st.error("AI Error. Check API key.")
-
-
+            st.error("AI Error")
