@@ -1,6 +1,26 @@
 import streamlit as st
 import google.generativeai as genai
 
+
+api_key = "AIzaSyBuXI1rAoCyDujcOSF7poXKZW1o_qozRhI" 
+genai.configure(api_key=api_key)
+
+st.title("🏔️ OskemenGuide AI")
+
+def load_model():
+    try:
+        # Пробуем только самый стабильный вариант
+        m = genai.GenerativeModel('gemini-1.5-flash')
+        return m
+    except Exception as e:
+        st.error(f"Техническая ошибка: {e}")
+        return None
+
+model = load_model()
+
+import streamlit as st
+import google.generativeai as genai
+
 st.set_page_config(page_title="OskemenGuide AI", page_icon="🏔️")
 st.title("🏔️ OskemenGuide AI")
 
