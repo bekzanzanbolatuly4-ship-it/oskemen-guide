@@ -1,51 +1,41 @@
 import streamlit as st
 import google.generativeai as genai
 
-
-api_key = "AIzaSyBuXI1rAoCyDujcOSF7poXKZW1o_qozRhI" 
-genai.configure(api_key=api_key)
-
-st.title("🏔️ OskemenGuide AI")
-
-def load_model():
-    try:
-        # Пробуем только самый стабильный вариант
-        m = genai.GenerativeModel('gemini-1.5-flash')
-        return m
-    except Exception as e:
-        st.error(f"Техническая ошибка: {e}")
-        return None
-
-model = load_model()
-
+# 1. Настройка страницы (должна быть в самом верху)
 st.set_page_config(page_title="OskemenGuide AI", page_icon="🏔️")
 st.title("🏔️ OskemenGuide AI")
 
-if "GEMINI_KEY" not in st.secrets:
-    st.error("Добавь GEMINI_KEY в Secrets")
-    st.stop()
+# 2. Настройка ключа (Пробуем сначала Secrets, если нет — используем прямой)
+if "GEMINI_KEY" in st.secrets:
+    API_KEY = st.secrets["GEMINI_KEY"]
+else:
+    # Твой новый ключ, который ты скинул
+    API_KEY = "AIzaSyBuXI1rAoCyDujcOSF7poXKZW1o_qozRhI"
 
-genai.configure(api_key=st.secrets["GEMINI_KEY"])
+genai.configure(api_key=API_KEY)
 
+# 3. Функция загрузки модели
 @st.cache_resource
 def load_model():
-    # Пробуем 3 разных способа обращения к модели
-    # Один из них точно сработает в зависимости от версии API
+    # Пробуем разные имена модели, чтобы избежать 404
     for name in ["models/gemini-1.5-flash", "gemini-1.5-flash", "gemini-pro"]:
         try:
-            m = genai.GenerativeModel(name)
-            m.generate_content("test") # Проверка связи
-            return m
+            model = genai.GenerativeModel(name)
+            # Тестовая проверка связи
+            model.generate_content("test")
+            return model
         except:
             continue
     return None
 
 model = load_model()
 
+# 4. Проверка подключения
 if not model:
-    st.error("Не удалось подключить модель. Проверь API ключ в Secrets.")
+    st.error("Ошибка: Модель недоступна. Проверь API ключ и интернет-соединение.")
     st.stop()
 
+# 5. Логика чата
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
@@ -60,10 +50,9 @@ if prompt := st.chat_input("Спроси про ВКО..."):
 
     with st.chat_message("assistant"):
         try:
-            # Твой промпт для гида
-            res = model.generate_content(f"Ты гид по ВКО. Ответь кратко: {prompt}")
-            st.markdown(res.text)
-            st.session_state.messages.append({"role": "assistant", "content": res.text})
+            # Промпт для гида
+            response = model.generate_content(f"Ты гид по Восточному Казахстану. Ответь кратко: {prompt}")
+            st.markdown(response.text)
+            st.session_state.messages.append({"role": "assistant", "content": response.text})
         except Exception as e:
             st.error(f"Ошибка API: {e}")
-
