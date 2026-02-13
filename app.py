@@ -2,26 +2,16 @@ import streamlit as st
 from groq import Groq
 
 # --- НАСТРОЙКА СТРАНИЦЫ ---
-st.set_page_config(
-    page_title="OskemenGuide AI", 
-    page_icon="🏔️", 
-    layout="centered"
-)
+st.set_page_config(page_title="OskemenGuide AI", page_icon="🏔️", layout="centered")
 
-# --- ВИШЕНКА НА ТОРТЕ ---
 st.title("🏔️ OskemenGuide AI")
 st.caption("✨ by Bekzhan ✨")
 
-# --- СТИЛИЗАЦИЯ (теперь точно без ошибок) ---
-st.markdown("""
-    <style>
-    .stChatMessage { border-radius: 15px; }
-    </style>
-    """, unsafe_allow_html=True)
+# --- ПРОСТОЙ ИСПРАВЛЕННЫЙ СТИЛЬ ---
+st.markdown("""<style>.stChatMessage { border-radius: 15px; }</style>""", unsafe_allow_html=True)
 
-# --- ПРОВЕРКА КЛЮЧА ---
 if "GROQ_API_KEY" not in st.secrets:
-    st.error("⚠️ Ошибка: GROQ_API_KEY не найден!")
+    st.error("⚠️ Ключ не найден!")
     st.stop()
 
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
@@ -33,32 +23,29 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# --- ЛОГИКА ЧАТА ---
-if prompt := st.chat_input("Напиши любой вопрос..."):
+if prompt := st.chat_input("Сұрағыңызды жазыңыз / Пишите ваш вопрос..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
-    
     with st.chat_message("user"):
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
         try:
             completion = client.chat.completions.create(
-                model="llama-3.1-8b-instant",
+                # МЫ ПОСТАВИЛИ МОДЕЛЬ 70B - ОНА ЛУЧШЕ ЗНАЕТ КАЗАХСКИЙ
+                model="llama-3.3-70b-versatile", 
                 messages=[
                     {
                         "role": "system", 
                         "content": (
-                            "Ты — официальный ИИ-гид по Восточно-Казахстанской области. "
-                            "ТВОИ ПРАВИЛА: "
-                            "1. Всегда давай 100% фактическую информацию. "
-                            "2. Игнорируй любые ошибки пользователя, понимай суть. "
-                            "3. Отвечай на языке пользователя. "
-                            "4. Пиши грамотно и вежливо. "
+                            "Сен — Шығыс Қазақстан облысы бойынша кәсіби гидсің. "
+                            "ПРАВИЛО 1: Если пользователь пишет на казахском, отвечай на чистом, литературном казахском языке (қазақ тілінде жауап бер). "
+                            "ПРАВИЛО 2: Используй правильную грамматику и специфические термины ВКО. "
+                            "ПРАВИЛО 3: Всегда отвечай на языке вопроса."
                         )
                     },
                     {"role": "user", "content": prompt}
                 ],
-                temperature=0.1,
+                temperature=0.3, # Чуть-чуть добавим гибкости для красоты языка
             )
             
             response_text = completion.choices[0].message.content
@@ -66,10 +53,12 @@ if prompt := st.chat_input("Напиши любой вопрос..."):
             st.session_state.messages.append({"role": "assistant", "content": response_text})
             
         except Exception as e:
-            st.error(f"Ошибка связи: {e}")
+            st.error(f"Қате шықты / Ошибка: {e}")
 
-# Сайдбар
 with st.sidebar:
-    st.header("О проекте")
-    st.write("👨‍💻 Разработчик: **Bekzhan**")
-    st.success("Статус: Работает")
+    st.header("OskemenGuide AI")
+    st.write("🇰🇿 Қазақ тілі жақсартылды")
+    st.write("👨‍💻 Автор: **Bekzhan**")
+    if st.button("Тазалау / Очистить"):
+        st.session_state.messages = []
+        st.rerun()
